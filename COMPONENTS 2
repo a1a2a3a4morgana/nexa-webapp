@@ -1,0 +1,54 @@
+import { useEffect } from "react";
+
+export default function PaypalDonate() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://www.paypal.com/sdk/js?client-id=TU_CLIENT_ID&currency=USD"; 
+    script.async = true;
+    script.onload = () => {
+      if (window.paypal) {
+        window.paypal.Buttons({
+          style: {
+            layout: "vertical",
+            color: "gold",
+            shape: "rect",
+            label: "donate",
+          },
+          createOrder: (data, actions) => {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: "5.00",
+                },
+              }],
+            });
+          },
+          onApprove: (data, actions) => {
+            return actions.order.capture().then(details => {
+              alert(`Gracias por tu donación, ${details.payer.name.given_name}!`);
+            });
+          },
+          onError: (err) => {
+            alert("Error en la donación, intenta nuevamente.");
+            console.error(err);
+          }
+        }).render("#paypal-button-container");
+      }
+    };
+    document.body.appendChild(script);
+
+    // Limpieza para evitar cargar el script varias veces
+    return () => {
+      const scriptTag = document.querySelector('script[src^="https://www.paypal.com/sdk/js"]');
+      if (scriptTag) {
+        scriptTag.remove();
+      }
+      const paypalButtons = document.getElementById("paypal-button-container");
+      if (paypalButtons) {
+        paypalButtons.innerHTML = "";
+      }
+    };
+  }, []);
+
+  return <div id="paypal-button-container"></div>;
+}
